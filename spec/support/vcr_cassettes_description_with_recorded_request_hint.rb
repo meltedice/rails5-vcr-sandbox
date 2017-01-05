@@ -23,48 +23,49 @@ module VcrCassetteInterationsReader
     end
 
     def description_for_used_interactions
-      message = "Current cassette used following recorded requests:\n"
+      message = ""
 
       if used_interactions.blank?
-        message += "  - No used recorded interactions\n"
+        message += "- No used recorded interactions\n"
       else
         used_interactions.each do |interaction|
           i = all_interactions.index(interaction)
-          message += "  %2d. %s\n" % [i + 1, format_interaction(interaction)]
+          message += "%2d. %s\n" % [i + 1, format_interaction(interaction)]
         end
       end
 
-      message + "\n"
+      message
     end
 
     def description_for_remaining_interactions
-      message = "Current cassette remains following recorded requests:\n"
+      message = ""
 
       if remaining_interactions.blank?
-        message += "  - No remaining recorded interactions\n"
+        message += "- No remaining recorded interactions\n"
       else
         remaining_interactions.each do |interaction|
           i = all_interactions.index(interaction)
-          message += "  %2d. %s\n" % [i + 1, format_interaction(interaction)]
+          message += "%2d. %s\n" % [i + 1, format_interaction(interaction)]
         end
       end
 
-      message + "\n"
+      message
     end
 
     def description_for_all_interactions
-      message = "Current cassette's recorded requests:\n"
+      message = ""
 
       if all_interactions.blank?
-        message += "  - No recorded interactions\n"
+        message += "- No recorded interactions\n"
       else
         all_interactions.each_with_index do |interaction, i|
-          sign = used_interactions.include?(interaction) ? 'x' : ' '
-          message += "  %2d. [#{sign}] %s\n" % [i + 1, format_interaction(interaction)]
+          actual_order = used_interactions.index(interaction)
+          actual_order += 1 if actual_order
+          message += "%2d. %2s %s\n" % [i + 1, actual_order, format_interaction(interaction)]
         end
       end
 
-      message + "\n"
+      message
     end
 
     def format_interaction(interaction)
@@ -90,14 +91,18 @@ module VcrCassettesDescriptionWithRecordedRequestHint
       if !current_cassettes.nil? && current_cassettes.size > 0
         # additional_message += "------------------------------ additional message:\n"
         current_cassettes.each do |cassette|
-          additional_message += cassette.description_for_used_interactions
-          additional_message += cassette.description_for_remaining_interactions
-          additional_message += cassette.description_for_all_interactions
+          additional_message += "Cassette: #{cassette.file}\n"
+          additional_message += "  - Used following recorded requests:\n"
+          additional_message += cassette.description_for_used_interactions.gsub(/^/, '    ')
+          additional_message += "  - Remains following recorded requests:\n"
+          additional_message += cassette.description_for_remaining_interactions.gsub(/^/, '    ')
+          additional_message += "  - Recorded requests: (recorded_order. actual_order http_metod request_uri)\n"
+          additional_message += cassette.description_for_all_interactions.gsub(/^/, '    ')
         end
         # additional_message += "------------------------------ additional message //\n"
       end
 
-      message = additional_message
+      message = "#{additional_message}\n"
       message += super
 
       message
