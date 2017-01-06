@@ -26,7 +26,68 @@ Things you may want to cover:
 
 ##  spec/support/vcr_cassettes_description_with_recorded_request_hint.rb
 
-### Before
+### Recorded requests
+
+1. GET http://0.0.0.0:3010/dummy/a?n=1
+2. GET http://0.0.0.0:3010/dummy/b?n=2
+3. GET http://0.0.0.0:3010/dummy/c?n=3
+4. GET http://0.0.0.0:3010/dummy/a?n=4
+5. GET http://0.0.0.0:3010/dummy/b?n=5
+6. GET http://0.0.0.0:3010/dummy/c?n=6
+7. GET http://0.0.0.0:3010/dummy/a?n=7
+8. GET http://0.0.0.0:3010/dummy/b?n=8
+9. GET http://0.0.0.0:3010/dummy/c?n=9
+
+### Pass: Call all requests in spec
+
+1.  GET http://0.0.0.0:3010/dummy/a?n=1
+2.  GET http://0.0.0.0:3010/dummy/b?n=2
+3.  GET http://0.0.0.0:3010/dummy/c?n=3
+4.  GET http://0.0.0.0:3010/dummy/a?n=4
+5.  GET http://0.0.0.0:3010/dummy/b?n=5
+6.  GET http://0.0.0.0:3010/dummy/c?n=6
+7.  GET http://0.0.0.0:3010/dummy/a?n=7
+8.  GET http://0.0.0.0:3010/dummy/b?n=8
+9.  GET http://0.0.0.0:3010/dummy/c?n=9
+
+### Pass: Skip 5th request
+
+1.  GET http://0.0.0.0:3010/dummy/a?n=1
+2.  GET http://0.0.0.0:3010/dummy/b?n=2
+3.  GET http://0.0.0.0:3010/dummy/c?n=3
+4.  GET http://0.0.0.0:3010/dummy/a?n=4
+5.                                      <- skip
+6.  GET http://0.0.0.0:3010/dummy/c?n=6
+7.  GET http://0.0.0.0:3010/dummy/a?n=7
+8.  GET http://0.0.0.0:3010/dummy/b?n=8
+9.  GET http://0.0.0.0:3010/dummy/c?n=9
+
+### Pass: Swap 5th and 6th requests
+
+1.  GET http://0.0.0.0:3010/dummy/a?n=1
+2.  GET http://0.0.0.0:3010/dummy/b?n=2
+3.  GET http://0.0.0.0:3010/dummy/c?n=3
+4.  GET http://0.0.0.0:3010/dummy/a?n=4
+5.  GET http://0.0.0.0:3010/dummy/c?n=6 <- 6
+6.  GET http://0.0.0.0:3010/dummy/b?n=5 <- 5
+7.  GET http://0.0.0.0:3010/dummy/a?n=7
+8.  GET http://0.0.0.0:3010/dummy/b?n=8
+9.  GET http://0.0.0.0:3010/dummy/c?n=9
+
+### Fail: Skip 5th request and call unknown request after 6th request
+
+1.  GET http://0.0.0.0:3010/dummy/a?n=1
+2.  GET http://0.0.0.0:3010/dummy/b?n=2
+3.  GET http://0.0.0.0:3010/dummy/c?n=3
+4.  GET http://0.0.0.0:3010/dummy/a?n=4
+5.                                      <- skip
+6.  GET http://0.0.0.0:3010/dummy/c?n=6
+7.  GET http://0.0.0.0:3010/dummy/c?n=x <- VCR::Errors::UnhandledHTTPRequestError
+8.  GET http://0.0.0.0:3010/dummy/a?n=7
+9.  GET http://0.0.0.0:3010/dummy/b?n=8
+10. GET http://0.0.0.0:3010/dummy/c?n=9
+
+#### Error messages: (before)
 
 ```
   1) dummy controller via http requests /a calling n=1 to n=9, but skip n=5 and call n=x after n=6
@@ -40,7 +101,7 @@ Things you may want to cover:
          GET http://0.0.0.0:3010/dummy/c?n=x
 
        VCR is currently using the following cassette:
-         - /Users/ice/fs/rails5-vcr-sandbox/spec/fixtures/vcr_cassettes/features/dummy/1.yml
+         - /path/to/spec/fixtures/vcr_cassettes/features/dummy/1.yml
            - :record => :none
            - :match_requests_on => [:method, :uri]
 
@@ -73,7 +134,7 @@ Things you may want to cover:
      # ./spec/features/dummy_spec.rb:43:in `block (3 levels) in <top (required)>'
 ```
 
-### After
+#### Error messages: (after)
 
 ```
   1) dummy controller via http requests /a calling n=1 to n=9, but skip n=5 and call n=x after n=6
@@ -86,32 +147,31 @@ Things you may want to cover:
        An HTTP request has been made that VCR does not know how to handle:
          GET http://0.0.0.0:3010/dummy/c?n=x
 
-       Current cassette used following recorded requests:
-          1.  GET http://0.0.0.0:3010/dummy/a?n=1
-          2.  GET http://0.0.0.0:3010/dummy/b?n=2
-          3.  GET http://0.0.0.0:3010/dummy/c?n=3
-          4.  GET http://0.0.0.0:3010/dummy/a?n=4
-          6.  GET http://0.0.0.0:3010/dummy/c?n=6
-
-       Current cassette remains following recorded requests:
-          5.  GET http://0.0.0.0:3010/dummy/b?n=5
-          7.  GET http://0.0.0.0:3010/dummy/a?n=7
-          8.  GET http://0.0.0.0:3010/dummy/b?n=8
-          9.  GET http://0.0.0.0:3010/dummy/c?n=9
-
-       Current cassette's recorded requests:
-          1. [x]  GET http://0.0.0.0:3010/dummy/a?n=1
-          2. [x]  GET http://0.0.0.0:3010/dummy/b?n=2
-          3. [x]  GET http://0.0.0.0:3010/dummy/c?n=3
-          4. [x]  GET http://0.0.0.0:3010/dummy/a?n=4
-          5. [ ]  GET http://0.0.0.0:3010/dummy/b?n=5
-          6. [x]  GET http://0.0.0.0:3010/dummy/c?n=6
-          7. [ ]  GET http://0.0.0.0:3010/dummy/a?n=7
-          8. [ ]  GET http://0.0.0.0:3010/dummy/b?n=8
-          9. [ ]  GET http://0.0.0.0:3010/dummy/c?n=9
+       Cassette: /path/to/spec/fixtures/vcr_cassettes/features/dummy/1.yml
+         - Used following recorded requests:
+            1.  GET http://0.0.0.0:3010/dummy/a?n=1
+            2.  GET http://0.0.0.0:3010/dummy/b?n=2
+            3.  GET http://0.0.0.0:3010/dummy/c?n=3
+            4.  GET http://0.0.0.0:3010/dummy/a?n=4
+            6.  GET http://0.0.0.0:3010/dummy/c?n=6
+         - Remains following recorded requests:
+            5.  GET http://0.0.0.0:3010/dummy/b?n=5
+            7.  GET http://0.0.0.0:3010/dummy/a?n=7
+            8.  GET http://0.0.0.0:3010/dummy/b?n=8
+            9.  GET http://0.0.0.0:3010/dummy/c?n=9
+         - Recorded requests: (recorded_order. actual_order http_metod request_uri)
+            1.  1  GET http://0.0.0.0:3010/dummy/a?n=1
+            2.  2  GET http://0.0.0.0:3010/dummy/b?n=2
+            3.  3  GET http://0.0.0.0:3010/dummy/c?n=3
+            4.  4  GET http://0.0.0.0:3010/dummy/a?n=4
+            5.     GET http://0.0.0.0:3010/dummy/b?n=5
+            6.  5  GET http://0.0.0.0:3010/dummy/c?n=6
+            7.     GET http://0.0.0.0:3010/dummy/a?n=7
+            8.     GET http://0.0.0.0:3010/dummy/b?n=8
+            9.     GET http://0.0.0.0:3010/dummy/c?n=9
 
        VCR is currently using the following cassette:
-         - /Users/ice/fs/rails5-vcr-sandbox/spec/fixtures/vcr_cassettes/features/dummy/1.yml
+         - /path/to/spec/fixtures/vcr_cassettes/features/dummy/1.yml
            - :record => :none
            - :match_requests_on => [:method, :uri]
 
